@@ -15,7 +15,7 @@ React Hooks for Stellar functionalities such as accounts, wallets, contracts, tr
 ## Installation
 
 ```bash
-npm install @omnilumen/hooks @omnilumen/core stellar-sdk
+npm install @omnilumen/hooks @omnilumen/core
 ```
 
 ## Simplified Setup and Configuration

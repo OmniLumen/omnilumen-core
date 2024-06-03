@@ -5,7 +5,7 @@ A collection of connectors for OmniLumen, enabling seamless integration with Ste
 ## Installation
 
 ```bash
-npm install @omnilumen/connectors @omnilumen/core stellar-sdk
+npm install @omnilumen/connectors @omnilumen/core
 ```
 
 ## Features
