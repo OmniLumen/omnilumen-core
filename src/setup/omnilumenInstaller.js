@@ -9,7 +9,7 @@
 import shell from 'shelljs';
 import {exec as execCallback, spawn} from 'child_process';
 
-export default class OmnilumenInstaller {
+class OmnilumenInstaller {
     /**
      * Install the component.
      * @throws {Error} Method not implemented.
@@ -53,6 +53,7 @@ export default class OmnilumenInstaller {
 
 
 }
+export default OmnilumenInstaller;
 /**
  * Run a shell command.
  * @returns {Promise<string>} - The command output.

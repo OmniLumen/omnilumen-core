@@ -1,0 +1,37 @@
+# Node modules directory
+node_modules/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Source files
+src/
+test/
+tests/
+
+# Configuration files
+*.config.js
+*.config.json
+
+# Documentation files
+*.md
+*.markdown
+
+# Git and npm metadata
+.git/
+.gitignore
+.npmignore
+
+# IDE-specific files
+.idea/
+.vscode/
+
+# Operating system-specific files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+coverage/

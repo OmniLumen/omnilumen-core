@@ -12,7 +12,7 @@ import semver from 'semver';
 import moment from 'moment';
 import Table from "cli-table3";
 import prompts from "prompts";
-import config from '../conf/config.js';
+import omnilumenConfig from '../conf/config.js';
 import {GITHUB_API_URL} from "../constants/const";
 
 
@@ -27,7 +27,7 @@ import {GITHUB_API_URL} from "../constants/const";
 export const getVersionTags = async (repo, numberOfTags = 12, cacheExpiryHours= 2) => {
     try {
         const cacheKey = `tags_${repo}`;
-        const cachedData = config.get(cacheKey);
+        const cachedData = omnilumenConfig.get(cacheKey);
         const currentTime = moment();
 
         if (cachedData && currentTime.diff(moment(cachedData.timestamp), 'hours') < cacheExpiryHours) {
@@ -53,7 +53,7 @@ export const getVersionTags = async (repo, numberOfTags = 12, cacheExpiryHours= 
         const tagsData = sortedTags.map(tag => ({ version: tag.name }));
 
         // Store in cache
-        config.set(cacheKey, { tags: tagsData, timestamp: currentTime });
+        omnilumenConfig.set(cacheKey, { tags: tagsData, timestamp: currentTime });
 
         return { tags: tagsData, error: null };
     } catch (error) {
