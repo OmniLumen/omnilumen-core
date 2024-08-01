@@ -1,43 +1,88 @@
 {
     "name": "omnilumen-core",
-    "version": "1.0.0",
-    "description": "A comprehensive development suite for Stellar, enabling quick local setup, seamless BigQuery integration, easy Stellar CLI commands, detailed local documentation, React hooks for Stellar functionalities, and wallet support.",
-    "main": "index.js",
+    "version": "0.1.0",
+    "description": "Core library for OmniLumen",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/esm/index.d.ts",
     "scripts": {
-      "start": "node index.js",
-      "build": "webpack --mode production",
-      "test": "jest"
+        "clean": "rm -rf dist",
+        "build:cjs": "babel src --out-dir dist/cjs --env-name cjs",
+        "build:esm": "babel src --out-dir dist/esm --env-name esm",
+        "build": "npm run clean && npm run build:cjs && npm run build:esm",
+        "test": "mocha 'test/**/*.test.js'"
     },
     "repository": {
-      "type": "git",
-      "url": "https://github.com/OmniLumen/omnilumen-core.git"
+        "type": "git",
+        "url": "https://github.com/OmniLumen/omnilumen-core.git"
+    },
+    "engines": {
+        "node": "22.x"
     },
     "keywords": [
-      "stellar",
-      "blockchain",
-      "bigquery",
-      "react",
-      "wallet",
-      "cli",
-      "development-suite"
+        "omnilumen",
+        "stellar",
+        "soroban",
+        "blockchain",
+        "lumen",
+        "stellar-cli",
+        "stellar-quickstart",
+        "web3",
+        "cli",
+        "llm",
+        "development-suite"
     ],
-    "author": "Omnilumen",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/OmniLumen/omnilumen-core/issues"
+        "url": "https://github.com/OmniLumen/omnilumen-core/issues"
     },
     "homepage": "https://github.com/OmniLumen/omnilumen-core#readme",
     "dependencies": {
-      "stellar-sdk": "^8.2.0",
-      "react": "^18.2.0",
-      "react-dom": "^18.2.0",
-      "next": "^13.0.0",
-      "vite": "^4.0.0"
+        "axios": "^1.7.2",
+        "boxen": "^8.0.0",
+        "cfonts": "^3.3.0",
+        "chalk": "^5.3.0",
+        "cli-spinners": "^3.1.0",
+        "cli-table3": "^0.6.5",
+        "columnify": "^1.6.0",
+        "commander": "^10.0.0",
+        "configstore": "^7.0.0",
+        "dotenv": "^16.4.5",
+        "dotenv-expand": "^11.0.6",
+        "esbuild": "^0.19.0",
+        "esm": "^3.2.25",
+        "execa": "^8.0.1",
+        "figlet": "^1.7.0",
+        "figures": "^6.1.0",
+        "find-up": "^6.3.0",
+        "fs-extra": "^11.2.0",
+        "glob": "^11.0.0",
+        "globby": "^13.2.2",
+        "inquirer": "^10.1.6",
+        "moment": "^2.30.1",
+        "ora": "^6.3.1",
+        "pathe": "^1.1.2",
+        "picocolors": "^1.0.0",
+        "prompts": "^2.4.2",
+        "requests": "^0.3.0",
+        "semver": "^7.6.3",
+        "shelljs": "^0.8.5",
+        "update-notifier": "^7.2.0",
+        "zod": "^3.22.2"
     },
     "devDependencies": {
-      "jest": "^29.0.0",
-      "webpack": "^5.0.0",
-      "babel-loader": "^8.0.0"
+        "@babel/cli": "^7.24.8",
+        "@babel/core": "^7.25.2",
+        "@babel/eslint-parser": "^7.25.1",
+        "@babel/node": "^7.25.0",
+        "@babel/plugin-transform-runtime": "^7.24.7",
+        "@babel/preset-env": "^7.25.3",
+        "@eslint/config-array": "^0.17.1",
+        "@eslint/object-schema": "^2.1.4",
+        "chai": "^5.1.1",
+        "eslint": "^8.46.0",
+        "jest": "^29.6.2",
+        "jsdoc": "^4.0.3",
+        "mocha": "^10.7.0"
     }
-  }
-  
+}

@@ -1,3 +1,10 @@
-# omnilumen-core
+# @omnilumen-core
 
-A comprehensive open source development suite for Stellar, enabling quick local setup, seamless BigQuery integration, easy Stellar CLI commands, detailed local documentation, React hooks for Stellar functionalities, and wallet support.
+A VanillaJS library for Stellar and Soroban.
+
+## Installation
+
+```bash
+npm install @omnilumen-core
+pnpm add @omnilumen-core
+bun add @omnilumen-core
