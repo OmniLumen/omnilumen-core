@@ -13,7 +13,7 @@ import moment from 'moment';
 import Table from "cli-table3";
 import prompts from "prompts";
 import omnilumenConfig from '../conf/config.js';
-import {GITHUB_API_URL} from "../constants/const";
+import {GITHUB_API_URL} from "../constants/const.js";
 
 
 /**

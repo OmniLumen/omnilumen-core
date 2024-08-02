@@ -7,10 +7,10 @@
  * @author Brian Wu
  */
 
-import * as utils from './utils';
-import * as constants from './constants';
-import * as conf from './conf';
-import * as setup from './setup';
+import * as utils from './utils/index.js';
+import * as constants from './constants/index.js';
+import * as conf from './conf/index.js';
+import * as setup from './setup/index.js';
 
 export {
     utils,

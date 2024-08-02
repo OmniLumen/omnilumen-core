@@ -7,5 +7,6 @@
  * @author Brian Wu
  */
 
-export {isWindows, isMacOS, isLinux} from "./util.js";
+import { isWindows, isMacOS, isLinux } from './util.js';
+export { isWindows, isMacOS, isLinux };
 

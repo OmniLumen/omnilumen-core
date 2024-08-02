@@ -7,7 +7,7 @@
  * @author Brian Wu
  */
 
-import {COMMON, MENU_ACTIONS} from "../constants/const";
+import {COMMON, MENU_ACTIONS} from "../constants/const.js";
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import {
