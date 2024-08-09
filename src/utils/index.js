@@ -8,5 +8,6 @@
  */
 
 import { isWindows, isMacOS, isLinux } from './util.js';
-export { isWindows, isMacOS, isLinux };
+import { executeCommand, processCommand, ensureStellarCli, findAllCommands, findCommand, findCommandWithPath } from './commandHelper.js';
+export { isWindows, isMacOS, isLinux, executeCommand, processCommand, ensureStellarCli, findAllCommands, findCommand, findCommandWithPath };
 
