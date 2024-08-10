@@ -1,201 +1,115 @@
+/**
+ * @file commandHelper.js
+ * @description BaseSetupMenu to set up components.
+ * @module Command Utils
+ * @version 1.0.0
+ * @license MIT
+ * @author Brian Wu
+ */
+
+import Configstore from "configstore";
 import shell from "shelljs";
-import inquirer from "inquirer";
+
 
 /**
- * Recursively searches for a command in the command structure.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string} key - The command key to search for.
- * @returns {Object|null} - The found command structure or null if not found.
+ * Initializes and loads the CLI configuration store.
+ *
+ * @param {string} configName - The name of the configuration store.
+ * @returns {Configstore} - Returns an instance of Configstore for the given configuration name.
  */
-export const findCommand = (commandStructure, key) => {
-    if (commandStructure.key === key) {
-        return commandStructure;
-    }
-    if (commandStructure.commands) {
-        for (let command of commandStructure.commands) {
-            const found = findCommand(command, key);
-            if (found) {
-                return found;
-            }
-        }
-    }
-    return null;
-}
+export const loadConfigStore = (configName) => {
+    return new Configstore(configName);
+};
+
 /**
- * Recursively searches for a command in the command structure, considering the command path.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string} path - The command path to search for.
- * @returns {Object|null} - The found command structure or null if not found.
+ * Finds the nearest valid command path by progressively removing the last part of the command.
+ *
+ * @param configStore - configstore with command path
+ * @param {string[]} commandParts - The array of command parts (e.g., ['stellar', 'network', 'rm']).
+ * @returns {string|null} - Returns the nearest valid command path or null if none found.
  */
-export const findCommandWithPath = (commandStructure, path) => {
-    const keys = path.split(' ');
-    let currentStructure = commandStructure;
+function findNearestValidCommand(configStore, commandParts) {
 
-    for (let key of keys) {
-        currentStructure = findFirstLevelCommand(currentStructure, key);
-        if (!currentStructure) {
-            return null;
+    const originalCommandParts = [...commandParts]; // Keep the original parts intact
+    let commandPath;
+    while (commandParts.length > 0) {
+        commandPath = commandParts.join('.'); // Join parts with '.'
+        if (configStore.has(commandPath)) {
+            return commandPath;
         }
+
+        commandParts.pop(); // Remove the last part and try again
     }
-
-    return currentStructure;
-}
-/**
- * Recursively finds all occurrences of a command and builds their paths.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string} key - The command key to search for.
- * @param {string} [path=''] - The current command path.
- * @returns {string[]} - An array of command paths.
- */
-export const findAllCommands = (commandStructure, key, path = '') => {
-    let commands = [];
-    const currentPath = path ? `${path} ${commandStructure.key}` : commandStructure.key;
-
-    if (commandStructure.key === key) {
-        commands.push(currentPath);
-    }
-
-    if (commandStructure.commands) {
-        for (let command of commandStructure.commands) {
-            commands = commands.concat(findAllCommands(command, key, currentPath));
-        }
-    }
-
-    return commands;
+    return originalCommandParts.length > 1 ? originalCommandParts.slice(0, -1).join('.') : null;
 }
 
 /**
- * Processes the input command, finds all matching subcommands, and handles them based on the number of matches.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string} command - The user input command to process.
- * @returns {Promise<string|null>} - A promise that resolves to the final command to execute or null if user selection is required.
+ * Checks if a command path exists in the store.
+ *
+ * @param configStore - configstore with command path
+ * @param {string} commandPath - The dot-separated command path (e.g., 'stellar.network.rm').
+ * @returns {boolean} - Returns true if the command path exists in the store, false otherwise.
  */
-export const processCommand = async (commandStructure, command) => {
-    const splitCommand = command.split(' ');
-    const lastSubcommand = splitCommand[splitCommand.length - 1];
-
-    const matchingCommands = findAllCommands(commandStructure, lastSubcommand);
-
-    if (matchingCommands.length === 1) {
-        // If there's only one match, return it directly
-        return matchingCommands[0];
-    } else if (matchingCommands.length > 1) {
-        // Filter commands by checking if the command context uniquely identifies it
-        const contextMatches = matchingCommands.filter(cmd => cmd.endsWith(command));
-        if (contextMatches.length === 1) {
-            // If the context uniquely identifies a command, return it
-            return contextMatches[0];
-        } else {
-            // If multiple matches still exist, prompt the user to select one
-            return await displayOptions(contextMatches);
-        }
-    } else {
-        // If no exact match is found, traverse up the command hierarchy
-        return await findClosestHelpCommand(commandStructure, splitCommand);
+export const isCommandInStore = (configStore, commandPath) => {
+    return configStore.has(commandPath);
+};
+/**
+ * Processes the command arguments to build the final command, ensuring it is valid.
+ *
+ * @param configStore - configstore with command path
+ * @param reconstructedCommand
+ * @returns {Promise<string>} - Returns the final command to be executed.
+ */
+export const processCliCommandArgs = async (configStore, reconstructedCommand) => {
+    const [commandPart, ...optionsPart] = reconstructedCommand.split(/ --/);
+    // Reattach the options part with -- prefix
+    const optionsString = optionsPart.length > 0 ? `--${optionsPart.join(' --')}` : '';
+    // Split the command part into its individual arguments
+    const commandParts = commandPart.trim().split(' ');
+    const startsWithStellar = commandParts[0] === 'stellar';
+    // Construct the command path using all parts of the command
+    const commandPath = commandParts.join('.');
+    // If the full command exists, return it without duplicating options
+    if (configStore.has(commandPath)) {
+        return `${commandPart.trim()} ${optionsString}`.trim();
     }
-}
-
-/**
- * Traverses up the command hierarchy to find a valid help or command if the exact match is not found.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string[]} commandParts - The split parts of the command.
- * @returns {Promise<string|null>} - A promise that resolves to the found help or command, or null if not found.
- */
-/**
- * Traverses up the command hierarchy to find a valid help or command if the exact match is not found.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string[]} commandParts - The split parts of the command.
- * @returns {Promise<string|null>} - A promise that resolves to the found help or command, or null if not found.
- */
-/**
- * Traverses up the command hierarchy to find a valid help or command if the exact match is not found.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string[]} commandParts - The split parts of the command.
- * @returns {Promise<string|null>} - A promise that resolves to the found help or command, or null if not found.
- */
-export const findClosestHelpCommand = async (commandStructure, commandParts) => {
-    let currentCommand = commandParts.join(' ');
-    let currentPath = '';
-
-    for (let i = 0; i < commandParts.length; i++) {
-        if (i > 0) {
-            currentPath += ' ';
-        }
-        currentPath += commandParts[i];
-    }
-
-    for (let i = commandParts.length - 1; i >= 0; i--) {
-        const partialCommand = commandParts.slice(0, i + 1).join(' ');
-        const helpCommand = `stellar ${partialCommand} --help`;
-
-        // Check if the partial command is a valid command at this level
-        const foundCommand = findCommandWithPath(commandStructure, partialCommand);
-        if (foundCommand) {
-            // console.log(`Command "${currentCommand}" not found. Showing help for "${partialCommand}":`);
-            return helpCommand;
-        }
+    // If the full command doesn't exist, find the nearest valid command
+    const nearestCommandPath = findNearestValidCommand(configStore, [...commandParts]);
+    if (nearestCommandPath) {
+        const splitNearestCommand = nearestCommandPath.split('.');
+        const lastKeyword = splitNearestCommand[splitNearestCommand.length - 1];
+        const lastKeywordIndex = commandParts.indexOf(lastKeyword) + 1;
+        const remainingArgs = commandParts.slice(lastKeywordIndex).join(' ');
+        return `${startsWithStellar ? '' : 'stellar '}${splitNearestCommand.join(' ')} ${remainingArgs} ${optionsString}`.trim();
     }
     return 'stellar --help';
-}
-/**
- * Recursively searches for a command in the command structure.
- * @param {Object} commandStructure - The command structure to search within.
- * @param {string} key - The command key to search for.
- * @returns {Object|null} - The found command structure or null if not found.
- */
-export const findFirstLevelCommand = (commandStructure, key) => {
-    if (commandStructure.key === key) {
-        return commandStructure;
-    }
-    if (commandStructure.commands) {
-        for (let command of commandStructure.commands) {
-            if (command.key === key) {
-                return command;
-            }
-        }
-    }
-    return null;
-}
-/**
- * Displays a list of command options for user selection.
- * @param {string[]} commands - The list of matching command paths.
- */
-/**
- * Displays a list of command options for user selection using inquirer.prompt.
- * @param {string[]} commands - The list of matching command paths.
- * @returns {Promise<string>} - A promise that resolves to the selected command.
- */
-export const displayOptions = async (commands) => {
-    const { selectedCommand } = await inquirer.prompt([
-        {
-            type: 'list',
-            name: 'selectedCommand',
-            message: 'Select a command to execute:',
-            choices: commands
-        }
-    ]);
-    return selectedCommand;
-}
+};
 
 /**
- * Function to recursively check if the last argument matches any command keys.
- * @param {Array} commands - The array of command objects.
- * @param {String} lastArg - The last argument in the process.argv array.
- * @returns {Boolean} - Returns true if the last argument matches a command key, otherwise false.
+ * Recursively generates command paths from the command structure and stores them in configstore.
+ *
+ * @param configStore - configstore with command path
+ * @param {Object} commandStructure - The structure representing the command hierarchy.
+ * @param {string} parentPath - The parent path to be prefixed to the current command.
  */
-export const isLastArgCommandKey = (commands, lastArg) => {
-    for (const command of commands) {
-        if (command.key === lastArg) {
-            return true;
-        }
-        if (command.commands && command.commands.length > 0) {
-            if (isLastArgCommandKey(command.commands, lastArg)) {
-                return true;
-            }
-        }
+export const generateCommandPaths = (configStore, commandStructure, parentPath = '') => {
+    const currentPath = parentPath ? `${parentPath}.${commandStructure.key}` : commandStructure.key;
+
+    if (commandStructure.commands && commandStructure.commands.length > 0) {
+        // Continue traversing down the tree
+        commandStructure.commands.forEach(subCommand => {
+            generateCommandPaths(configStore, subCommand, currentPath);
+        });
+    } else {
+        // If it's a leaf node, store the path
+        configStore.set(currentPath, commandStructure.description);
     }
-    return false;
-}
+};
+
+// Function to retrieve all stored commands
+export const getStoredCommands = (configStore) => {
+    return configStore.all;
+};
 
 /**
  * execute command
