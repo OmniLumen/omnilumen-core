@@ -9,5 +9,6 @@
 
 import { isWindows, isMacOS, isLinux } from './util.js';
 import { executeCommand, ensureStellarCli, generateCommandPaths, loadConfigStore, processCliCommandArgs, isCommandInStore } from './commandHelper.js';
-export { isWindows, isMacOS, isLinux, executeCommand, ensureStellarCli, generateCommandPaths, loadConfigStore, processCliCommandArgs, isCommandInStore};
+import { ensureStellarQuickStart } from './containerHelper.js';
+export { isWindows, isMacOS, isLinux, executeCommand, ensureStellarCli, ensureStellarQuickStart, generateCommandPaths, loadConfigStore, processCliCommandArgs, isCommandInStore};
 
