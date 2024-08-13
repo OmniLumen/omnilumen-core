@@ -13,7 +13,7 @@ import moment from 'moment';
 import Table from "cli-table3";
 import prompts from "prompts";
 import config from '../conf/config.js';
-import {GITHUB_API_URL} from "../constants/const.js";
+import {GITHUB_API_URL, TAG} from "../constants/const.js";
 
 const { omnilumenConfig, omnilumenQuickStartConfig } = config;
 /**
@@ -174,29 +174,12 @@ export const displayVersion = async (tool, version) => {
 
     console.log(table.toString());
 }
-/**
- * Display versions in a table.
- * @param {Object} tags - The versions to display.
- */
-export const displayVersionTags = async (tags) => {
-    const table = new Table({
-        head: ['Version'],
-        colWidths: [20, 20, 20, 20]
-    });
 
-    const rows = [];
-    for (let i = 0; i < tags.length; i += 4) {
-        rows.push(tags.slice(i, i + 4).map(tag => tag.version));
-    }
-    table.push(...rows);
-    console.log(table.toString());
-}
 export const displayInstallerVersion = async (installer) => {
     const version = await installer.checkVersion();
     const toolName = installer.constructor.name.replace('Installer', '').toLowerCase();
     await displayVersion(toolName, version);
 }
-
 
 /**
  * Handle the updating to a selected version.
@@ -220,17 +203,31 @@ const promptVersionSelection = async (installer, action) => {
         console.error('Error fetching available versions:', result.error);
         return null;
     }
-    await displayVersionTags(result.tags);
-
-    const response = await prompts({
-        type: 'select',
-        name: 'version',
-        message: `Which version do you want to ${action}?`,
-        choices: [
-            { title: 'Back', value: 'back' },
-            ...result.tags.map(tag => ({ title: tag.version, value: tag.version })),
-        ],
-    });
+    let type = await installer.tagType();
+    let response;
+    if(TAG.IMAGE === type) {
+        await displayImageTagsTable(result.tags, [25, 25, 25, 25]);
+        response = await prompts({
+            type: 'select',
+            name: 'version',
+            message: `Which version do you want to ${action}?`,
+            choices: [
+                { title: 'Back', value: 'back' },
+                ...result.tags.map(tag => ({ title: tag, value: tag })),
+            ],
+        });
+    } else {
+        await displayVersionTagsTable(result.tags, [20, 20, 20, 20]);
+        response = await prompts({
+            type: 'select',
+            name: 'version',
+            message: `Which version do you want to ${action}?`,
+            choices: [
+                { title: 'Back', value: 'back' },
+                ...result.tags.map(tag => ({ title: tag.version, value: tag.version })),
+            ],
+        });
+    }
 
     if (response.version === 'back') {
         return null; // Return to the previous menu
@@ -240,4 +237,53 @@ const promptVersionSelection = async (installer, action) => {
         console.log(`${action.charAt(0).toUpperCase() + action.slice(1)} cancelled.`);
         return null;
     }
+};
+
+/**
+ * Display github release versions in a table.
+ * @param {Object[]} tags - The versions to display.
+ * @param {number[]} colWidths - An array of numbers representing the width of each column.
+ */
+export const displayVersionTagsTable = async (tags, colWidths = [20, 20, 20, 20]) => {
+    const columns = colWidths.length;
+
+    const table = new Table({
+        head: new Array(columns).fill('Version'),
+        colWidths: colWidths,
+    });
+
+    const rows = [];
+    for (let i = 0; i < tags.length; i += columns) {
+        rows.push(tags.slice(i, i + columns).map(tag => tag.version));
+    }
+
+    table.push(...rows);
+
+    // Print a newline before displaying the table
+    console.log('');
+    console.log(table.toString());
+    console.log('');
+};
+/**
+ * Display docker image versions in a table.
+ * @param {Object[]} tags - The versions to display.
+ * @param {number[]} colWidths - An array of numbers representing the width of each column.
+ */
+export const displayImageTagsTable = async (tags, colWidths) => {
+    const columns = colWidths.length;
+
+    const table = new Table({
+        head: new Array(columns).fill('Version'),
+        colWidths: colWidths,
+    });
+
+    const rows = [];
+    for (let i = 0; i < tags.length; i += columns) {
+        rows.push(tags.slice(i, i + columns));
+    }
+    table.push(...rows);
+    // Print a newline before displaying the table
+    console.log('');
+    console.log(table.toString());
+    console.log('');
 };

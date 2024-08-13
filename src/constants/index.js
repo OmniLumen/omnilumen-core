@@ -7,5 +7,5 @@
  * @author Brian Wu
  */
 
-import  { MENU_ACTIONS, COMMON, GITHUB_API_URL } from "./const.js";
-export { MENU_ACTIONS, COMMON, GITHUB_API_URL };
+import  { MENU_ACTIONS, COMMON, GITHUB_API_URL, TAG } from "./const.js";
+export { MENU_ACTIONS, COMMON, GITHUB_API_URL, TAG };
