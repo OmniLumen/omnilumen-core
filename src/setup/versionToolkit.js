@@ -12,10 +12,10 @@ import semver from 'semver';
 import moment from 'moment';
 import Table from "cli-table3";
 import prompts from "prompts";
-import omnilumenConfig from '../conf/config.js';
-import {GITHUB_API_URL} from "../constants/const.js";
+import config from '../conf/config.js';
+import {GITHUB_API_URL, TAG} from "../constants/const.js";
 
-
+const { omnilumenConfig, omnilumenQuickStartConfig } = config;
 /**
 * Get sorted tags by commit date from a GitHub repository.
 * @param {string} repo - The repository to get tags from.
@@ -24,7 +24,7 @@ import {GITHUB_API_URL} from "../constants/const.js";
 * @returns {Promise<Array<{ version: string, date: string }>>} - The sorted tags.
 * @throws {Error} Error fetching tags.
 */
-export const getVersionTags = async (repo, numberOfTags = 12, cacheExpiryHours= 2) => {
+export const getVersionTags = async (repo, numberOfTags = 12, cacheExpiryHours= 3) => {
     try {
         const cacheKey = `tags_${repo}`;
         const cachedData = omnilumenConfig.get(cacheKey);
@@ -62,6 +62,60 @@ export const getVersionTags = async (repo, numberOfTags = 12, cacheExpiryHours= 
     }
 };
 
+/**
+ * Retrieves a list of tags for the specified Docker repository, filtered by the provided criteria.
+ *
+ * @param {string} repo - The name of the Docker repository.
+ * @param {number} limit - The number of tags to fetch starting from the latest.
+ * @param {number} cacheExpiryHours - The number of hours before the cache expires.
+ * @param {Function} filter - A predicate function to filter the tags. Only tags for which this function returns true will be included.
+ * @returns {Promise<{tags: string[], error: string | null}>} - A promise that resolves to an object containing the tags and any error that occurred.
+ */
+export const listImageTags = async (repo, limit = 100, cacheExpiryHours = 3, filter = () => true) => {
+    try {
+        if (!repo || repo.trim() === '') {
+            throw new Error("Usage: listTags <repoName> [limit]");
+        }
+
+        const cacheKey = `tags_${repo}`;
+        const cachedData = omnilumenQuickStartConfig.get(cacheKey);
+        const currentTime = moment();
+
+        // Check if cached data is valid based on expiry
+        if (cachedData && currentTime.diff(moment(cachedData.timestamp), 'hours') < cacheExpiryHours) {
+            const tags = cachedData.tags.slice(0, limit);
+            return { tags, error: null };
+        }
+
+        const baseUrl = `https://registry.hub.docker.com/v2/repositories/${repo}/tags/`;
+        let allTags = [];
+        let page = 1;
+        let hasNextPage = true;
+
+        while (hasNextPage && allTags.length < limit) {
+            const url = `${baseUrl}?page_size=${limit}&page=${page}`;
+            const response = await axios.get(url);
+            const data = response.data;
+
+            const tags = data.results.map(tag => tag.name);
+            allTags = allTags.concat(tags);
+
+            page += 1;
+            hasNextPage = data.next !== null;
+        }
+
+        // Filter and limit to the requested number of tags
+        allTags = allTags.filter(filter).slice(0, limit);
+
+        // Store the result in cache with the current timestamp
+        omnilumenQuickStartConfig.set(cacheKey, { tags: allTags, timestamp: currentTime });
+
+        return { tags: allTags, error: null };
+    } catch (error) {
+        console.error('Error fetching tags:', error);
+        return { tags: [], error: 'Error fetching tags. Please check your network connection and try again.' };
+    }
+};
 /**
  * Check GitHub API rate limit status.
  * @returns {Promise<boolean>} - True if within rate limit, false if exceeded.
@@ -120,29 +174,12 @@ export const displayVersion = async (tool, version) => {
 
     console.log(table.toString());
 }
-/**
- * Display versions in a table.
- * @param {Object} tags - The versions to display.
- */
-export const displayVersionTags = async (tags) => {
-    const table = new Table({
-        head: ['Version'],
-        colWidths: [20, 20, 20, 20]
-    });
 
-    const rows = [];
-    for (let i = 0; i < tags.length; i += 4) {
-        rows.push(tags.slice(i, i + 4).map(tag => tag.version));
-    }
-    table.push(...rows);
-    console.log(table.toString());
-}
 export const displayInstallerVersion = async (installer) => {
     const version = await installer.checkVersion();
     const toolName = installer.constructor.name.replace('Installer', '').toLowerCase();
     await displayVersion(toolName, version);
 }
-
 
 /**
  * Handle the updating to a selected version.
@@ -166,17 +203,31 @@ const promptVersionSelection = async (installer, action) => {
         console.error('Error fetching available versions:', result.error);
         return null;
     }
-    await displayVersionTags(result.tags);
-
-    const response = await prompts({
-        type: 'select',
-        name: 'version',
-        message: `Which version do you want to ${action}?`,
-        choices: [
-            { title: 'Back', value: 'back' },
-            ...result.tags.map(tag => ({ title: tag.version, value: tag.version })),
-        ],
-    });
+    let type = await installer.tagType();
+    let response;
+    if(TAG.IMAGE === type) {
+        await displayImageTagsTable(result.tags, [25, 25, 25, 25]);
+        response = await prompts({
+            type: 'select',
+            name: 'version',
+            message: `Which version do you want to ${action}?`,
+            choices: [
+                { title: 'Back', value: 'back' },
+                ...result.tags.map(tag => ({ title: tag, value: tag })),
+            ],
+        });
+    } else {
+        await displayVersionTagsTable(result.tags, [20, 20, 20, 20]);
+        response = await prompts({
+            type: 'select',
+            name: 'version',
+            message: `Which version do you want to ${action}?`,
+            choices: [
+                { title: 'Back', value: 'back' },
+                ...result.tags.map(tag => ({ title: tag.version, value: tag.version })),
+            ],
+        });
+    }
 
     if (response.version === 'back') {
         return null; // Return to the previous menu
@@ -186,4 +237,53 @@ const promptVersionSelection = async (installer, action) => {
         console.log(`${action.charAt(0).toUpperCase() + action.slice(1)} cancelled.`);
         return null;
     }
+};
+
+/**
+ * Display github release versions in a table.
+ * @param {Object[]} tags - The versions to display.
+ * @param {number[]} colWidths - An array of numbers representing the width of each column.
+ */
+export const displayVersionTagsTable = async (tags, colWidths = [20, 20, 20, 20]) => {
+    const columns = colWidths.length;
+
+    const table = new Table({
+        head: new Array(columns).fill('Version'),
+        colWidths: colWidths,
+    });
+
+    const rows = [];
+    for (let i = 0; i < tags.length; i += columns) {
+        rows.push(tags.slice(i, i + columns).map(tag => tag.version));
+    }
+
+    table.push(...rows);
+
+    // Print a newline before displaying the table
+    console.log('');
+    console.log(table.toString());
+    console.log('');
+};
+/**
+ * Display docker image versions in a table.
+ * @param {Object[]} tags - The versions to display.
+ * @param {number[]} colWidths - An array of numbers representing the width of each column.
+ */
+export const displayImageTagsTable = async (tags, colWidths) => {
+    const columns = colWidths.length;
+
+    const table = new Table({
+        head: new Array(columns).fill('Version'),
+        colWidths: colWidths,
+    });
+
+    const rows = [];
+    for (let i = 0; i < tags.length; i += columns) {
+        rows.push(tags.slice(i, i + columns));
+    }
+    table.push(...rows);
+    // Print a newline before displaying the table
+    console.log('');
+    console.log(table.toString());
+    console.log('');
 };

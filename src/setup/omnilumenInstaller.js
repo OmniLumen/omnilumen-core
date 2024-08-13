@@ -8,6 +8,7 @@
  */
 import shell from 'shelljs';
 import {exec as execCallback, spawn} from 'child_process';
+import Table from "cli-table3";
 
 class OmnilumenInstaller {
     /**
@@ -42,6 +43,13 @@ class OmnilumenInstaller {
     async getAvailableVersions() {
         throw new Error('Method not implemented.');
     }
+    /**
+     * display available versions from a repository.
+     * @throws {Error} Method not implemented.
+     */
+    async displayVersionTags(tags) {
+        throw new Error('Method not implemented.');
+    }
 
     /**
      * Check the currently installed version.
@@ -50,9 +58,39 @@ class OmnilumenInstaller {
     async checkVersion() {
         throw new Error('Method not implemented.');
     }
+    /**
+     * get the component tag type.
+     * @throws {Error} Method not implemented.
+     */
+    async tagType() {
+        throw new Error('Method not implemented.');
+    }
+    /**
+     * Creates a table with the provided version tags.
+     *
+     * @param {string[]} tags - An array of version tags to display in the table.
+     * @param {number} columns - The number of columns to display in the table.
+     * @returns {Table} - A CLI table populated with the version tags.
+     */
+    createTable = (tags, columns = 4) => {
+        const colWidths = new Array(columns).fill(20); // Dynamically generate column widths
+        const table = new Table({
+            head: new Array(columns).fill('Version'), // Dynamically generate column headers
+            colWidths: colWidths,
+        });
+
+        const rows = [];
+        for (let i = 0; i < tags.length; i += columns) {
+            rows.push(tags.slice(i, i + columns));
+        }
+
+        table.push(...rows);
+        return table;
+    }
 
 
 }
+
 export default OmnilumenInstaller;
 /**
  * Run a shell command.
@@ -82,6 +120,21 @@ export const runShellCommand = async (command, spinner) => {
     });
 }
 
+/**
+ * Executes a shell command and returns the output as a trimmed string.
+ * @param {string} command - The shell command to execute.
+ * @returns {Promise<string>} - A promise that resolves with the command's output or rejects with an error.
+ */
+export const executeShellCommand = async (command) => {
+    return new Promise((resolve, reject) => {
+        shell.exec(command, { silent: true }, (code, stdout, stderr) => {
+            if (code !== 0) {
+                return reject(new Error(stderr || 'Command failed'));
+            }
+            resolve(stdout.trim());
+        });
+    });
+};
 /**
  * Run a shell command and log the output in real-time.
  * @param {string} command - The command to run.

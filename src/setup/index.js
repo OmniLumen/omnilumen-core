@@ -8,6 +8,6 @@
  */
 
 import BaseSetupMenu  from "./baseSetupMenu.js";
-import OmnilumenInstaller, {runShellCommand, runShellCommandWithLogs, runCommand} from "./omnilumenInstaller.js";
-export {getVersions, displayCurrentVersions, displayInstallerVersion, displayVersion, displayVersionTags, getVersionTags, updateVersion} from "./versionToolkit.js";
-export { BaseSetupMenu, OmnilumenInstaller, runShellCommand, runShellCommandWithLogs, runCommand };
+import OmnilumenInstaller, {runShellCommand, runShellCommandWithLogs, runCommand, executeShellCommand} from "./omnilumenInstaller.js";
+export {getVersions, listImageTags, displayCurrentVersions, displayInstallerVersion, displayVersion, displayVersionTagsTable, displayImageTagsTable, getVersionTags, updateVersion} from "./versionToolkit.js";
+export { BaseSetupMenu, OmnilumenInstaller, runShellCommand, runShellCommandWithLogs, runCommand, executeShellCommand };

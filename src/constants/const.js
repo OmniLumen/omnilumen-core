@@ -16,6 +16,10 @@ export const MENU_ACTIONS = {
     INSTALL: 'install',
 
 };
+export const TAG = {
+    GIT: 'git',
+    IMAGE: 'image'
+};
 
 export const COMMON = {
     UNKNOWN: 'unknown',

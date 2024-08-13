@@ -13,7 +13,6 @@ import chalk from 'chalk';
 import {
     displayCurrentVersions,
     displayInstallerVersion,
-    displayVersionTags,
     getVersions,
     updateVersion
 } from './versionToolkit.js'; // Adjust the path as needed
@@ -124,8 +123,9 @@ class BaseSetupMenu {
                 if (error) {
                     console.error('Error fetching available versions:', error);
                 } else {
-                    await displayVersionTags(tags);
+                    await installer.displayVersionTags(tags);
                 }
+                break;
                 break;
             case MENU_ACTIONS.VERSION_INFO:
                 await displayInstallerVersion(installer)
