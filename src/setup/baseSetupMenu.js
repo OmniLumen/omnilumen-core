@@ -15,7 +15,8 @@ import {
     displayInstallerVersion,
     getVersions,
     updateVersion
-} from './versionToolkit.js'; // Adjust the path as needed
+} from './versionToolkit.js';
+import cfonts from 'cfonts';
 
 class BaseSetupMenu {
     constructor(installerMap) {
@@ -139,5 +140,48 @@ class BaseSetupMenu {
         return true;
     }
 }
-
 export default BaseSetupMenu;
+
+/**
+ * Function to display a stylized message using cfonts.
+ * The message, font, colors, and other settings can be customized.
+ *
+ * @param {string} message - The message to display.
+ * @param {object} [options={}] - The configuration options for cfonts.
+ * @param {string} [options.font='simple'] - The font face to use.
+ * @param {string} [options.align='left'] - The text alignment.
+ * @param {Array<string>} [options.colors=['system']] - The colors to use.
+ * @param {string} [options.background='transparent'] - The background color.
+ * @param {number} [options.letterSpacing=1] - The letter spacing.
+ * @param {number} [options.lineHeight=1] - The line height.
+ * @param {boolean} [options.space=true] - Whether to add empty lines on top and bottom.
+ * @param {number|string} [options.maxLength='0'] - The maximum length of a line.
+ * @param {Array<string>} [options.gradient=['red', 'blue']] - The gradient colors.
+ * @param {boolean} [options.independentGradient=false] - Whether to recalculate the gradient for each line.
+ * @param {boolean} [options.transitionGradient=false] - Whether to transition between colors directly.
+ * @param {boolean} [options.rawMode=false] - Whether to use CRLF for line breaks.
+ * @param {string} [options.env='node'] - The environment in which cfonts is executed.
+ */
+export const displayHomeMenu = (message, options = {}) => {
+    // Set default options and allow overwriting through the options parameter
+    const defaultOptions = {
+        font: 'simple',
+        align: 'left',
+        colors: ['system'],
+        background: 'transparent',
+        letterSpacing: 1,
+        lineHeight: 1,
+        space: true,
+        maxLength: '0',
+        gradient: ['red', 'blue'],
+        independentGradient: false,
+        transitionGradient: false,
+        rawMode: false,
+        env: 'node'
+    };
+
+    const mergedOptions = { ...defaultOptions, ...options };
+
+    // Display the styled message
+    cfonts.say(message, mergedOptions);
+}
