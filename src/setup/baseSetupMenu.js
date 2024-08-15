@@ -17,6 +17,7 @@ import {
     updateVersion
 } from './versionToolkit.js';
 import cfonts from 'cfonts';
+import Table from 'cli-table3';
 
 class BaseSetupMenu {
     constructor(installerMap) {
@@ -184,4 +185,30 @@ export const displayHomeMenu = (message, options = {}) => {
 
     // Display the styled message
     cfonts.say(message, mergedOptions);
+}
+
+/**
+ * Displays a help table for the provided commands.
+ *
+ * @param {string} title - The title to display above the command list.
+ * @param {Array} commands - The list of commands to display. Each command should be an object with `command`, `aliases`, and `description` properties.
+ */
+export const showHelp = (title, commands) => {
+    const table = new Table({
+        head: ['Command', 'Aliases', 'Description', 'Example'],
+        colWidths: [30, 30, 50, 50],
+        style: {
+            head: ['cyan'],
+            border: ['gray'],
+            'padding-left': 2,
+            'padding-right': 2
+        }
+    });
+
+    commands.forEach(cmd => {
+        table.push([cmd.command, cmd.aliases.join(', '), cmd.description, cmd.example]);
+    });
+
+    console.log(title);
+    console.log(table.toString());
 }

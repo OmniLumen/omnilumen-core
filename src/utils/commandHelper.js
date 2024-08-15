@@ -10,7 +10,6 @@
 import Configstore from "configstore";
 import shell from "shelljs";
 
-
 /**
  * Initializes and loads the CLI configuration store.
  *
@@ -136,4 +135,23 @@ export async function ensureStellarCli() {
             }
         });
     });
+}
+
+/**
+ * Recursively traverse the command structure and collect command data.
+ *
+ * @param {Object} commandStructure - The command structure to traverse.
+ * @param {Array} collectedCommands - The array where collected command data will be stored.
+ */
+export function collectCommands(commandStructure, collectedCommands = []) {
+    if (commandStructure.commands && commandStructure.commands.length > 0) {
+        commandStructure.commands.forEach(subCommand => {
+            collectedCommands.push({
+                command: subCommand.key,
+                description: subCommand.description,
+                example: subCommand.example || '',
+            });
+            collectCommands(subCommand, collectedCommands);
+        });
+    }
 }
