@@ -8,9 +8,9 @@
  */
 
 import { isWindows, isMacOS, isLinux } from './util.js';
-import { executeCommand, ensureStellarCli, generateCommandPaths, loadConfigStore, processCliCommandArgs, isCommandInStore } from './commandHelper.js';
+import { executeCommand, ensureStellarCli, generateCommandPaths, loadConfigStore, processCliCommandArgs, isCommandInStore, collectCommands} from './commandHelper.js';
 import { ensureStellarQuickStart, shutdownContainer, startDockerContainer, removeExistingContainer, stopContainersByImageName } from './containerHelper.js';
 export { isWindows, isMacOS, isLinux, executeCommand, ensureStellarCli, ensureStellarQuickStart, shutdownContainer,
-    startDockerContainer, removeExistingContainer, stopContainersByImageName,
+    startDockerContainer, removeExistingContainer, stopContainersByImageName,collectCommands,
     generateCommandPaths, loadConfigStore, processCliCommandArgs, isCommandInStore};
 

@@ -7,7 +7,7 @@
  * @author Brian Wu
  */
 
-import BaseSetupMenu, { displayHomeMenu }  from "./baseSetupMenu.js";
+import BaseSetupMenu, { displayHomeMenu, showHelp }  from "./baseSetupMenu.js";
 import OmnilumenInstaller, {runShellCommand, runShellCommandWithLogs, runCommand, executeShellCommand} from "./omnilumenInstaller.js";
 export {getVersions, listImageTags, displayCurrentVersions, displayInstallerVersion, displayVersion, displayVersionTagsTable, displayImageTagsTable, getVersionTags, updateVersion} from "./versionToolkit.js";
-export { BaseSetupMenu, displayHomeMenu, OmnilumenInstaller, runShellCommand, runShellCommandWithLogs, runCommand, executeShellCommand };
+export { BaseSetupMenu, displayHomeMenu, showHelp, OmnilumenInstaller, runShellCommand, runShellCommandWithLogs, runCommand, executeShellCommand };
